@@ -9,21 +9,25 @@
 #include <thrust/copy.h>
 #include <vector>
 
-namespace rmm_wrapped {
+namespace gpu {
 
 template <typename T>
 class device_vector {
 public:
-    using value_type = T;
-    using iterator = typename rmm::device_uvector<T>::iterator;
-    using const_iterator = typename rmm::device_uvector<T>::const_iterator;
+  using value_type = T;
+  using iterator = typename rmm::device_uvector<T>::iterator;
+  using const_iterator = typename rmm::device_uvector<T>::const_iterator;
 
-    // 기본 allocator: memory pool 기반
-    static rmm::mr::device_memory_resource* get_default_resource() {
-        static rmm::mr::cuda_memory_resource cuda_mr;
-        static rmm::mr::pool_memory_resource pool_mr{&cuda_mr};
-        return &pool_mr;
-    }
+  // 기본 allocator: memory pool 기반
+  static rmm::mr::device_memory_resource *get_default_resource() {
+    static rmm::mr::cuda_memory_resource cuda_mr;
+    static rmm::mr::pool_memory_resource<rmm::mr::cuda_memory_resource> pool_mr(
+        &cuda_mr,
+        128 * 1024 * 1024, // initial pool size: 128MB
+        1024 * 1024 * 1024 // max pool size: 1GB
+    );
+    return &pool_mr;
+  }
 
     // 생성자: 크기만 지정
     explicit device_vector(size_t size)
@@ -60,7 +64,7 @@ public:
     // host → device 복사
     void copy_from_host(const std::vector<T>& host_vec) {
         resize(host_vec.size());
-        thrust::copy(thrust::host, host_vec.begin(), host_vec.end(), begin());
+        thrust::copy(host_vec.begin(), host_vec.end(), begin());
     }
 
     // device → host 복사

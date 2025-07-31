@@ -20,6 +20,7 @@ add_executable(gemm_test test_gemm.cpp)
 target_link_libraries(gemm_test
     PRIVATE
         gemm
+        rmm
         gtest
         gtest_main
 )

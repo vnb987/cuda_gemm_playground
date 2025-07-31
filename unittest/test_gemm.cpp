@@ -5,8 +5,12 @@
 #include <vector>
 #include <iostream>
 #include <random>
+#include "device_matrix.hpp"
+#include "functors.cuh"
+#include "cuda_gemm_handler.hpp"
 
 using namespace cpu;
+using namespace gpu;
 
 template<typename T>
 void printVector(std::vector<T>& A){
@@ -84,3 +88,24 @@ TEST(GemmTestCpu, IntType) {
     printMatrix(C, 8, 8);
 }
 
+
+TEST(GemmTestGpu, linking_test){
+    auto A = makeRandomVector<float>(64, 1, 4);
+    auto B = makeRandomVector<float>(64, 1, 4);
+    gpu::device_matrix<float> A_d(8, 8);
+    gpu::device_matrix<float> B_d(8, 8);
+    gpu::device_matrix<float> C_d(8, 8);
+    A_d.copy_from_host(A.data());
+    B_d.copy_from_host(B.data());
+    dim3 blockDim(1);
+    dim3 gridDim(1);
+    gpu::cudaGemmHandler<float, 32, 32, 32, 16, MultiplyAddOutplace> handler(blockDim, gridDim);
+    handler.compute(A_d, B_d, C_d);
+
+    
+
+    
+
+    
+    
+}
