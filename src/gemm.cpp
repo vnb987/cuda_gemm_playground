@@ -39,7 +39,6 @@ void gemm(const std::vector<T>& A, const std::vector<T>& B, std::vector<T>& C, l
     } 
 }
 
-
 template void gemm<float>(
     const std::vector<float>&, const std::vector<float>&, std::vector<float>&, layout);
 
