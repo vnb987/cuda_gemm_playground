@@ -4,8 +4,8 @@
 #include "functors.cuh"
 namespace gpu {
 #define INSTANTIATE_GEMM_HANDLERS()                                            \
-  template class gpu::cudaGemmHandler<float, 32, 32, 32, 16,                   \
+  template class gpu::cudaGemmHandler<float, 32, 32, 32, 16, 32,               \
                                       MultiplyAddOutplace>;                    \
-  template class gpu::cudaGemmHandler<double, 64, 64, 32, 16,                  \
+  template class gpu::cudaGemmHandler<double, 64, 64, 32, 16, 32,              \
                                       MultiplyAddOutplace>;
 } // namespace gpu

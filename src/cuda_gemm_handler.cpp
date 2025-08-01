@@ -6,8 +6,8 @@
 namespace gpu {
 
 template <typename T, int tile_m, int tile_n, int tile_k, int tile_mm,
-          template <typename> class Op>
-void cudaGemmHandler<T, tile_m, tile_n, tile_k, tile_mm, Op>::compute(
+          int tile_kk, template <typename> class Op>
+void cudaGemmHandler<T, tile_m, tile_n, tile_k, tile_mm, tile_kk, Op>::compute(
     const device_matrix<T> &A, const device_matrix<T> &B, device_matrix<T> &C) {
   switch (impl_type_) {
   case gemmType::naive:

@@ -92,7 +92,8 @@ TEST(GemmTestGpu, naiveImplTest){
     // define layout for CPU impl.
     layout t{m, n, k, 16, 16, 16};
     gemm(A, B, C_cpu, t);
-    gpu::cudaGemmHandler<float, 32, 32, 32, 16, MultiplyAddOutplace> handler;
+    gpu::cudaGemmHandler<float, 32, 32, 32, 16, 32, MultiplyAddOutplace>
+        handler;
     handler.compute(A_d, B_d, C_d);
     C_d.copy_to_host(C_gpu.data());
     for(int i = 0; i < 128; i++){
@@ -100,5 +101,4 @@ TEST(GemmTestGpu, naiveImplTest){
           EXPECT_FLOAT_EQ(C_cpu[128 * i + j], C_gpu[128 * i + j]);
         }
     }
-    // printMatrix(C_gpu, C_d.rows(), C_d.cols());
 }

@@ -44,8 +44,8 @@ __global__ void gemm_kernel(const T *A, const T *B, const int m, const int n,
   }
 }
 
-template <typename T, int tile_m, int tile_n, int tile_k, int tile_mm,
-          int tile_kk, template <typename> class Op>
+template <typename T, int tile_m, int tile_n, int tile_k, int tile_mm, int tile_kk,
+          template <typename> class Op>
 void cudaGemmHandler<T, tile_m, tile_n, tile_k, tile_mm, tile_kk, Op>::gemmNaive(
     const device_matrix<T> &A, const device_matrix<T> &B, device_matrix<T> &C) {
   assert(tile_m % tile_mm == 0);
@@ -55,10 +55,9 @@ void cudaGemmHandler<T, tile_m, tile_n, tile_k, tile_mm, tile_kk, Op>::gemmNaive
   dim3 grid_dim_(num_tile_k, num_tile_m);
   dim3 block_dim_(tile_k, num_tile_mm);
   // we have already checked size mismatch
-  gemm_kernel<T, tile_m, tile_n, tile_k, tile_mm, tile_kk>
-      <<<grid_dim_, block_dim_>>>(A.data(), B.data(), A.rows(), A.cols(),
-                                  B.cols(), num_tile_m, num_tile_k, C.data(),
-                                  op_);
+  gemm_kernel<T, tile_m, tile_n, tile_k, tile_mm><<<grid_dim_, block_dim_>>>(
+      A.data(), B.data(), A.rows(), A.cols(), B.cols(), num_tile_m, num_tile_k,
+      C.data(), op_);
   cudaDeviceSynchronize();
 }
 
