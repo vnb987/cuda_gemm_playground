@@ -60,7 +60,7 @@ std::vector<T> makeRandomVector(size_t size, T min = T(0), T max = T(1)) {
     return vec;
 }
 
-TEST(GemmTestCpu, FloatType) {
+TEST(GemmTestCpu, basic) {
     auto A = makeRandomVector<float>(64, 1, 5);
     auto B = makeRandomVector<float>(64, 1, 5);
     std::vector<float> C(64, 0.0f);
@@ -74,32 +74,31 @@ TEST(GemmTestCpu, FloatType) {
     printMatrix(C, 8, 8);
 }
 
-TEST(GemmTestCpu, IntType) {
-    auto A = makeRandomVector<int>(64, 1, 5);
-    auto B = makeRandomVector<int>(64, 1, 5);
-    std::vector<int> C(64, 0.0f);
-    layout t{8, 8, 8, 4, 4, 4};
-    std::cout << "[A matrix]---------------------------------------------" << std::endl;
-    printMatrix(A, 8, 8);
-    std::cout << "[B matrix]---------------------------------------------" << std::endl;
-    printMatrix(B, 8, 8);
-    gemm(A, B, C ,t);1
-    std::cout << "[C matrix]---------------------------------------------" << std::endl;
-    printMatrix(C, 8, 8);
-}
 
-
-TEST(GemmTestGpu, linking_test){
-    auto A = makeRandomVector<float>(64, 1, 4);
-    auto B = makeRandomVector<float>(64, 1, 4);
-    gpu::device_matrix<float> A_d(8, 8);
-    gpu::device_matrix<float> B_d(8, 8);
-    gpu::device_matrix<float> C_d(8, 8);
+TEST(GemmTestGpu, naiveImplTest){
+    // object generation
+    int m = 1024;
+    int n = 1024;
+    int k = 1024;
+    auto A = makeRandomVector<float>(m * n, 1, 5);
+    auto B = makeRandomVector<float>(n * k, 1, 5);
+    auto C_cpu = makeRandomVector<float>(m * k, 1, 1);
+    auto C_gpu = makeRandomVector<float>(m * k, 1, 1);
+    gpu::device_matrix<float> A_d(m,n);
+    gpu::device_matrix<float> B_d(n, k);
+    gpu::device_matrix<float> C_d(m, k);
     A_d.copy_from_host(A.data());
     B_d.copy_from_host(B.data());
-    dim3 blockDim(1);
-    dim3 gridDim(1);
-    gpu::cudaGemmHandler<float, 32, 32, 32, 16, MultiplyAddOutplace> handler(blockDim, gridDim);
+    // define layout for CPU impl.
+    layout t{m, n, k, 16, 16, 16};
+    gemm(A, B, C_cpu, t);
+    gpu::cudaGemmHandler<float, 32, 32, 32, 16, MultiplyAddOutplace> handler;
     handler.compute(A_d, B_d, C_d);
-    
+    C_d.copy_to_host(C_gpu.data());
+    for(int i = 0; i < 128; i++){
+        for(int j = 0; j < 128; j++){
+          EXPECT_FLOAT_EQ(C_cpu[128 * i + j], C_gpu[128 * i + j]);
+        }
+    }
+    // printMatrix(C_gpu, C_d.rows(), C_d.cols());
 }

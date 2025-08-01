@@ -24,19 +24,13 @@ __global__ void gemm_kernel(const T *A, const T *B, const int m, const int n,
       if(tile_k * k_tile_index + threadIdx.x > k) break;
       if(tile_m * m_tile_index + tile_mm * threadIdx.y > m) break;
       const T *A_ptr = A + n * (tile_m * m_tile_index + tile_mm * threadIdx.y);
-      const T *B_ptr = B + tile_k * k_tile_index;
-      // auto out_tile_length_m = tile_m > m - m_tile_index * tile_m
-      //                              ? m - m_tile_index * tile_m
-      //                              : tile_m;
-      // auto out_tile_length_k = tile_k > k - k_tile_index * tile_k
-      //                              ? k - k_tile_index * tile_k
-      //                              : tile_k;
+      const T *B_ptr = B + tile_k * k_tile_index+ threadIdx.x;
       #pragma parallel for
       for (int i = 0; i < tile_mm; i++){
         C_[i] = 0;
       }
       for (int i = 0; i < n; i++) {
-        T B_ = B_ptr[tile_k * k_tile_index + threadIdx.x + (i)*k];
+        T B_ = B_ptr[i*k];
         for (int jj = 0; jj < tile_mm; jj++) {
           int m_index = m_tile_index * tile_m + tile_mm * threadIdx.y + jj;
           if (m_index >= m)
@@ -44,7 +38,7 @@ __global__ void gemm_kernel(const T *A, const T *B, const int m, const int n,
           C_[jj] = op(A_ptr[jj * n + i], B_, C_[jj]);
         }
       }
-      for(int i = 0; i < tile_mm; i++)
+      for (int i = 0; i < tile_mm; i++)
         output_ptr[i * k] = C_[i];
     }
   }
@@ -55,11 +49,13 @@ template <typename T, int tile_m, int tile_n, int tile_k, int tile_mm,
 void cudaGemmHandler<T, tile_m, tile_n, tile_k, tile_mm, Op>::gemmNaive(
     const device_matrix<T> &A, const device_matrix<T> &B, device_matrix<T> &C) {
   assert(tile_m % tile_mm == 0);
+  int num_tile_mm = std::ceil(float(tile_m) / tile_mm);
   int num_tile_m = std::ceil(float(A.rows()) / tile_m);
   int num_tile_k = std::ceil(float(B.cols()) / tile_k);
-
+  dim3 grid_dim_(num_tile_k, num_tile_m);
+  dim3 block_dim_(tile_k, num_tile_mm);
   // we have already checked size mismatch
-  gemm_kernel<T, tile_m, tile_n, tile_k, tile_mm><<<block_dim_, grid_dim_>>>(
+  gemm_kernel<T, tile_m, tile_n, tile_k, tile_mm><<<grid_dim_, block_dim_>>>(
       A.data(), B.data(), A.rows(), A.cols(), B.cols(), num_tile_m, num_tile_k,
       C.data(), op_);
   cudaDeviceSynchronize();
