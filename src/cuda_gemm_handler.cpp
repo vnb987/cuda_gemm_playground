@@ -1,4 +1,5 @@
 #include "cuda_gemm_handler.hpp"
+#include "explicit_instantiations.hpp"
 #include "functors.cuh"
 #include <stdexcept>
 
@@ -16,6 +17,5 @@ void cudaGemmHandler<T, tile_m, tile_n, tile_k, tile_mm, Op>::compute(
     throw std::logic_error("Other types are not implemented yet");
   }
 }
-template class cudaGemmHandler<float, 32, 32, 32, 16, MultiplyAddOutplace>;
-template class cudaGemmHandler<double, 64, 64, 32, 16, MultiplyAddOutplace>;
+INSTANTIATE_GEMM_HANDLERS();
 } // namespace gpu

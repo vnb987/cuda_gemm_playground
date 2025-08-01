@@ -83,7 +83,7 @@ TEST(GemmTestCpu, IntType) {
     printMatrix(A, 8, 8);
     std::cout << "[B matrix]---------------------------------------------" << std::endl;
     printMatrix(B, 8, 8);
-    gemm(A, B, C ,t);
+    gemm(A, B, C ,t);1
     std::cout << "[C matrix]---------------------------------------------" << std::endl;
     printMatrix(C, 8, 8);
 }
@@ -101,11 +101,5 @@ TEST(GemmTestGpu, linking_test){
     dim3 gridDim(1);
     gpu::cudaGemmHandler<float, 32, 32, 32, 16, MultiplyAddOutplace> handler(blockDim, gridDim);
     handler.compute(A_d, B_d, C_d);
-
-    
-
-    
-
-    
     
 }
